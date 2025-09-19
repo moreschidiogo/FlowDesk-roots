@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowDesk</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* --- ESTILOS GERAIS --- */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #0d1117; color: #c9d1d9; margin: 0; padding: 0; overflow-x: hidden; }
+
+        /* --- ESTILOS DO LOGIN --- */
+        #login-container { display: flex; align-items: center; justify-content: center; height: 100vh; position: relative; overflow: hidden; background-color: #0d1117; }
+        #login-box { background-color: #203147; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-align: center; width: 320px; position: relative; z-index: 2; border: 1px solid #3d5573; }
+        #login-box h2 { margin-top: 0; margin-bottom: 25px; color: #fff; font-weight: 500; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; font-size: 14px; color: #a0a8b1; }
+        .input-group input { width: 100%; padding: 10px; background-color: #16273c; border: 1px solid #3d5573; border-radius: 4px; color: #c9d1d9; box-sizing: border-box; }
+        #login-btn { background-color: #007bff; color: #fff; border: none; border-radius: 4px; padding: 12px; width: 100%; font-size: 16px; cursor: pointer; transition: background-color 0.2s; }
+        #login-btn:hover { background-color: #0056b3; }
+        #error-message { color: #F84955; margin-top: 15px; font-size: 14px; display: none; min-height: 18px; }
+        #forgot-password-link { display: block; margin-top: 15px; font-size: 13px; color: #a0a8b1; text-decoration: none; transition: color 0.2s; }
+        #forgot-password-link:hover { color: #007bff; }
+        .dev-credit-login { font-family: "Consolas", monospace; font-size: 12px; color: #a0a8b1; margin-top: 25px; text-align: center; }
+
+        /* --- ANIMAÇÃO DE FUNDO --- */
+        .bg-animation { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; overflow: hidden; }
+        .bg-animation canvas { position: absolute; top: 0; left: 0; }
+
+        /* --- ESTILOS DA APLICAÇÃO PRINCIPAL --- */
+        #app-container { display: none; }
+        header { background-color: #16273c; padding: 10px 20px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); border-bottom: 1px solid #2f405a; display: flex; align-items: center; justify-content: space-between; }
+        header h1 { margin: 0; font-size: 18px; font-weight: 500; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .header-controls { display: flex; align-items: center; gap: 20px; }
+        .dev-credit { font-size: 12px; color: #a0a8b1; font-weight: 400; }
+
+        /* --- ESTILOS DE NOTIFICAÇÃO --- */
+        .notification-container { position: relative; cursor: pointer; color: #a0a8b1; font-size: 1.1em; }
+        .notification-container:hover { color: #fff; }
+        .notification-badge { position: absolute; top: -5px; right: -8px; background-color: #F84955; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        #notifications-list { max-height: 400px; overflow-y: auto; margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd; }
+        .notification-item { padding: 12px; background-color: #ebecf0; border-radius: 4px; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 10px; transition: opacity 0.3s, transform 0.3s; }
+        .notification-item p { margin: 0; line-height: 1.4; color: #333; }
+        .notification-item p .timestamp { display: block; font-size: 11px; color: #777; margin-top: 4px; }
+        .notification-item .mark-read-btn { background: none; border: none; color: #888; font-size: 16px; cursor: pointer; padding: 5px; }
+        .notification-item .mark-read-btn:hover { color: #111; }
+        .no-notifications { padding: 20px; text-align: center; color: #888; font-size: 13px; }
+        .clear-all-btn { background-color: #6c757d; color: #fff; border: none; border-radius: 4px; padding: 4px 10px; font-size: 12px; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+        .clear-all-btn:hover { background-color: #5a6268; }
+        .modal-header .modal-header-title { display: flex; align-items: center; gap: 15px; }
+
+        /* --- ESTILOS DO FILTRO --- */
+        .filter-container { padding: 15px 20px; background-color: #16273c; display: flex; flex-wrap: wrap; align-items: center; gap: 20px; border-bottom: 1px solid #2f405a;}
+        .filter-group { display: flex; align-items: center; gap: 8px; }
+        .filter-group label { font-size: 13px; font-weight: 500; color: #a0a8b1; cursor: pointer; }
+        .filter-group select { background-color: #203147; color: #c9d1d9; border: 1px solid #3d5573; border-radius: 4px; padding: 5px 8px; font-size: 13px; }
+        .filter-group select:focus { outline: none; border-color: #007bff; }
+        .filter-group input[type="checkbox"] { transform: scale(1.2); }
+
+        /* --- ESTILOS DO KANBAN --- */
+        .kanban-board { display: flex; justify-content: flex-start; padding: 20px; gap: 15px; flex-wrap: nowrap; overflow-x: auto; align-items: flex-start; }
+        .kanban-column { background-color: #203147; border-radius: 6px; padding: 10px 8px; min-width: 290px; max-width: 320px; flex-shrink: 0; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); display: flex; flex-direction: column; height: fit-content; max-height: calc(100vh - 145px); }
+        .column-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px; }
+        .kanban-column h2 { font-size: 14px; font-weight: 600; color: #c9d1d9; margin: 0; text-transform: uppercase; }
+        .options-button { background: none; border: none; color: #a0a8b1; cursor: pointer; font-size: 14px; padding: 5px; border-radius: 4px; transition: background-color 0.2s; }
+        .options-button:hover { background-color: #2f405a; }
+        .kanban-cards { flex-grow: 1; min-height: 20px; padding-bottom: 10px; overflow-y: auto; }
+        .kanban-cards::-webkit-scrollbar { width: 8px; }
+        .kanban-cards::-webkit-scrollbar-thumb { background-color: #556a85; border-radius: 4px; }
+        .kanban-cards::-webkit-scrollbar-track { background-color: #2f405a; }
+        .kanban-card { position: relative; background-color: #293d54; border-radius: 4px; padding: 10px; margin-bottom: 8px; cursor: pointer; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); transition: box-shadow 0.2s, transform 0.2s, background-color 0.2s, border-left 0.3s; border: 1px solid #3d5573; border-left: 4px solid transparent; }
+        .kanban-card.completed { border-left: 4px solid #4CAF50; }
+        .kanban-card.overdue { border-left-color: #F84955; }
+        .kanban-card:active { cursor: grabbing; }
+        .kanban-card.dragging { opacity: 0.7; transform: scale(1.02); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); background-color: #374d68; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .card-header .title { font-size: 14px; font-weight: 500; color: #f0f2f5; margin: 0; word-wrap: break-word; flex-grow: 1; padding-right: 25px; /* Espaço para a checkbox */ }
+        .card-header .remove-button { background: none; border: none; color: #7d90a8; cursor: pointer; font-size: 1.1em; padding: 0 5px; line-height: 1; transition: color 0.2s; }
+        .card-header .remove-button:hover { color: #c9d1d9; }
+        .card-tags { margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+        .card-tag { background-color: #3d5573; color: #d1e2f7; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 500; text-transform: uppercase; }
+        .tag-drn { background-color: #E6A726; color: #1a1a1a; } .tag-projeto { background-color: #27C555; color: #1a1a1a; } .tag-acao { background-color: #F84955; color: #fff; } .tag-demanda { background-color: #007bff; color: #fff; }
+        .card-details { display: flex; align-items: center; gap: 15px; margin-top: 10px; color: #a0a8b1; font-size: 12px; flex-wrap: wrap; }
+        .card-details span { display: flex; align-items: center; gap: 5px; }
+        .card-details .date.overdue-date-text { color: #F84955; font-weight: bold; }
+        .card-details i { color: #7d90a8; }
+        .card-details .progress-bar-container { flex-grow: 1; height: 4px; background-color: #4a5d77; border-radius: 2px; overflow: hidden; min-width: 50px; }
+        .card-details .progress-bar { height: 100%; background-color: #4CAF50; transition: width 0.3s ease-in-out; }
+        .card-responsibles { margin-left: auto; display: flex; flex-direction: row-reverse; padding-right: 5px; }
+        .avatar { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #4a6381; color: #fff; font-size: 10px; font-weight: bold; border: 2px solid #293d54; margin-right: -8px; }
+        .add-card-button { background-color: #374d68; color: #c9d1d9; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; width: 100%; padding: 8px 10px; font-size: 13px; font-weight: 500; margin-top: 10px; text-align: left; display: flex; align-items: center; gap: 8px; }
+        .add-card-button:hover { background-color: #4a6381; }
+        .add-card-button i { font-size: 12px; }
+        .chart-pie-container { padding: 15px; position: relative; height: 280px; display: flex; align-items: center; justify-content: center; }
+        
+        /* --- NOVA COLUNA DE RESUMO --- */
+        .summary-column {
+            background-color: #203147;
+            border-radius: 6px;
+            padding: 20px;
+            min-width: 260px;
+            max-width: 290px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
+            max-height: calc(100vh - 145px);
+        }
+
+        /* --- ESTILOS DO MODAL --- */
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
+        .modal-content { background-color: #f4f5f7; color: #1a1a1a; margin: 5% auto; padding: 25px; border-radius: 8px; width: 85%; max-width: 600px; position: relative; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-button:hover, .close-button:focus { color: #333; text-decoration: none; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .modal-header i { font-size: 24px; color: #555; margin-right: 15px; }
+        #modal-title { font-size: 24px; font-weight: 600; margin: 0; color: #1a1a1a; }
+        .modal-body { display: flex; flex-direction: column; gap: 20px; }
+        .section h3 { font-size: 16px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .tag-options-container { display: flex; flex-wrap: wrap; gap: 5px; }
+        .tag-option { background-color: #e2e4e6; color: #555; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
+        .tag-option:hover { background-color: #d0d2d6; }
+        .description-box { background-color: #ebecf0; border-radius: 4px; padding: 10px; font-size: 14px; line-height: 1.4; cursor: text; min-height: 80px; border: 1px solid #c4c4c4; box-sizing: border-box; }
+        .description-box:focus { outline: none; background-color: #fff; border-color: #007bff; }
+
+        /* --- ESTILOS DO CHECKLIST --- */
+        .checklist-item-row { display: flex; flex-wrap: nowrap; align-items: center; gap: 10px; margin-bottom: 8px; position: relative; }
+        .checklist-item-row > .checklist-text { flex-grow: 1; text-align: left; }
+        .checklist-item-row .checklist-text[contenteditable="true"] { background-color: #fff; outline: 1px solid #007bff; border-radius: 3px; padding: 2px 4px; }
+        .checklist-item-row input[type="checkbox"] { transform: scale(1.2); cursor: pointer; flex-shrink: 0;}
+        .checklist-item-row .completed-text { text-decoration: line-through; color: #888; }
+        .checklist-controls { display: flex; align-items: center; margin-left: auto; }
+        .checklist-item-row .remove-item-button, .checklist-item-row .checklist-move-btn { background: none; border: none; color: #aaa; cursor: pointer; font-size: 1.1em; opacity: 0; transition: opacity 0.2s; flex-shrink: 0; }
+        .checklist-item-row .checklist-move-btn { font-size: 14px; padding: 0 4px; }
+        .checklist-item-row:hover .remove-item-button, .checklist-item-row:hover .checklist-move-btn { opacity: 1; }
+        .checklist-date-range { font-size: 11px; color: #555; background-color: #dce0e6; padding: 2px 6px; border-radius: 10px; white-space: nowrap; cursor: pointer; flex-shrink: 0;}
+        .checklist-input-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .checklist-input-row input[type="text"] { flex: 2 1 180px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .checklist-input-row input[type="date"] { flex: 1 1 120px; padding: 7px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; min-width: 120px;}
+        .checklist-input-row button { background-color: #007bff; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; flex-shrink: 0; }
+        .checklist-date-editor { display: flex; gap: 5px; align-items: center; margin-left: auto; }
+        .checklist-date-editor input { width: 120px; padding: 2px; font-size: 11px; }
+        .checklist-date-editor button { font-size: 10px; padding: 2px 6px; }
+
+        .date-fields { display: flex; gap: 15px; flex-wrap: wrap; }
+        .date-fields div { flex: 1; min-width: 150px; }
+        .date-fields label { font-weight: 500; margin-bottom: 5px; display: block; }
+        .date-fields input { width: 100%; padding: 8px; box-sizing: border-box; border-radius: 4px; border: 1px solid #ccc; }
+        .completion-status { display: flex; align-items: center; gap: 10px; padding: 10px; background-color: #ebecf0; border-radius: 4px; }
+        .completion-status input { transform: scale(1.3); }
+        .completion-status label { margin: 0; font-weight: 600; cursor: pointer; }
+        
+        #replan-dates-btn {
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        #replan-dates-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* --- ESTILOS DE CRITICIDADE --- */
+        .card-criticity-indicator { display: flex; align-items: center; gap: 4px; font-weight: bold; }
+        .crit-1 { color: #F84955; } /* Vermelho */
+        .crit-2 { color: #E6A726; } /* Laranja */
+        .crit-3 { color: #64B5F6; } /* Azul */
+
+        .criticity-options-container { display: flex; gap: 10px; }
+        .criticity-option { flex: 1; border: 2px solid transparent; background-color: #e2e4e6; color: #333; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: 600; text-align: center; transition: all 0.2s; }
+        .criticity-option:hover { opacity: 0.8; }
+        .criticity-option.crit-1.active { background-color: #F84955; color: #fff; border-color: #c43542; }
+        .criticity-option.crit-2.active { background-color: #E6A726; color: #1a1a1a; border-color: #b5821c; }
+        .criticity-option.crit-3.active { background-color: #64B5F6; color: #fff; border-color: #4292d3; }
+
+        /* --- QUADRO DE RESUMO DE CRITICIDADE --- */
+        #criticity-summary h3 { font-size: 14px; text-align: center; margin-top: 0; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; color: #c9d1d9;}
+        .criticity-summary-item { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+        .criticity-summary-item .count { font-weight: bold; }
+
+        /* --- ESTILOS DO MODAL DE RESET DE SENHA --- */
+        #reset-box { background-color: #203147; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-align: center; width: 340px; }
+        #reset-box h2 { margin-top: 0; margin-bottom: 15px; color: #fff; font-weight: 500; }
+        #reset-box p { font-size: 14px; color: #a0a8b1; margin-top: 0; margin-bottom: 25px; }
+        #reset-btn, #cancel-reset-btn { border: none; border-radius: 4px; padding: 12px; width: 100%; font-size: 16px; cursor: pointer; transition: background-color 0.2s; margin-top: 10px; }
+        #reset-btn { background-color: #007bff; color: #fff; }
+        #reset-btn:hover { background-color: #0056b3; }
+        #cancel-reset-btn { background-color: #374d68; color: #c9d1d9; }
+        #cancel-reset-btn:hover { background-color: #4a6381; }
+        #reset-message { min-height: 18px; margin-top: 15px; font-size: 14px; font-weight: 500; }
+
+        /* --- ESTILOS DO GRÁFICO --- */
+        #chart-container { background-color: #203147; padding: 20px; margin: 0 20px 20px 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
+        #chart-container h2 { margin-top: 0; font-size: 18px; font-weight: 600; text-align: center; margin-bottom: 15px; }
+        #chart-legend { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; font-size: 12px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-item .fas { font-size: 10px; }
+        .backlog-color { color: #E57373; }
+        .pending-color { color: #FFD54F; }
+        .ongoing-color { color: #64B5F6; }
+        .completed-color { color: #81C784; }
+        #bar-chart { display: flex; justify-content: space-around; height: 200px; border-left: 2px solid #556a85; border-bottom: 2px solid #556a85; padding: 0 10px; }
+        .bar-wrapper { display: flex; flex-direction: column; align-items: center; height: 100%; flex-grow: 1; }
+        .bar-group { display: flex; flex-direction: row; justify-content: center; align-items: flex-end; height: 100%; width: 100%; gap: 4px; padding: 0 5px; }
+        .bar { width: 22px; border-radius: 4px 4px 0 0; transition: height 0.5s ease-in-out; position: relative; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 4px; }
+        .bar.backlog { background-color: #E57373; }
+        .bar.pending { background-color: #FFD54F; }
+        .bar.ongoing { background-color: #64B5F6; }
+        .bar.completed { background-color: #81C784; }
+        .bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); color: #fff; background-color: rgba(0, 0, 0, 0.6); padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; white-space: nowrap; opacity: 1; transition: opacity 0.3s, top 0.3s, transform 0.3s; pointer-events: none; }
+        .bar[data-height="0"] .bar-value, .bar[data-height="1"] .bar-value, .bar[data-height="2"] .bar-value, .bar[data-height="3"] .bar-value, .bar[data-height="4"] .bar-value, .bar[data-height="5"] .bar-value, .bar[data-height="6"] .bar-value, .bar[data-height="7"] .bar-value { opacity: 0; }
+        .bar:hover .bar-value { opacity: 1; top: -25px; transform: translateX(-50%) scale(1.1); }
+        .bar-label { margin-top: 8px; font-size: 12px; font-weight: 500; text-align: center; white-space: nowrap; }
+
+        /* --- ESTILOS DA TABELA --- */
+        #data-table-container { background-color: #203147; padding: 20px; margin: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .section-header h2 { margin: 0; font-size: 18px; font-weight: bold; }
+        .export-buttons { display: flex; gap: 10px; }
+        .export-btn { background-color: #374d68; color: #c9d1d9; border: none; border-radius: 4px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background-color 0.2s; display: flex; align-items: center; gap: 8px; }
+        .export-btn:hover { background-color: #4a6381; }
+        .table-wrapper { max-height: 230px; overflow-y: auto; overflow-x: auto; }
+        .table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
+        .table-wrapper::-webkit-scrollbar-thumb { background-color: #556a85; border-radius: 4px; }
+        .table-wrapper::-webkit-scrollbar-track { background-color: #2f405a; }
+        #data-table { width: 100%; border-collapse: collapse; color: #c9d1d9; }
+        #data-table th, #data-table td { padding: 10px 12px; border-bottom: 1px solid #3d5573; text-align: left; font-size: 13px; white-space: nowrap;}
+        #data-table th { background-color: #293d54; font-weight: 600; position: sticky; top: 0; z-index: 1; }
+        #data-table tbody tr:hover { background-color: #293d54; }
+        #data-table td { vertical-align: top; word-break: break-word; white-space: normal;}
+        .toggle-checklist { background: none; border: none; color: #a0a8b1; cursor: pointer; font-size: 12px; padding: 0 5px; margin-left: 5px; transition: transform 0.2s; }
+        .toggle-checklist.expanded { transform: rotate(90deg); }
+        .checklist-items { padding-top: 5px; padding-left: 10px; display: none; }
+
+        /* --- ESTILOS DO QUADRO DE ARQUIVO --- */
+        .archive-search-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 5px;
+            margin-bottom: 10px;
+            background-color: #293d54;
+            border-radius: 4px;
+        }
+        .archive-search-container input,
+        .archive-search-container select {
+            width: 100%;
+            padding: 6px 8px;
+            font-size: 12px;
+            background-color: #16273c;
+            border: 1px solid #3d5573;
+            border-radius: 4px;
+            color: #c9d1d9;
+            box-sizing: border-box;
+        }
+        .archived-info {
+            font-size: 10px;
+            color: #7d90a8;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #3d5573;
+        }
+
+        /* Efeitos para minimizar/expandir cartão arquivado */
+        #column-archive .kanban-card {
+            max-height: 45px; /* Altura do cartão minimizado */
+            overflow: hidden;
+            transition: max-height 0.35s ease-in-out, background-color 0.2s;
+        }
+
+        #column-archive .kanban-card .card-tags,
+        #column-archive .kanban-card .card-details,
+        #column-archive .kanban-card .archived-info {
+            visibility: hidden; /* Esconde os detalhes por padrão */
+            opacity: 0;
+            transition: visibility 0.1s, opacity 0.3s ease-in-out;
+        }
+
+        #column-archive .kanban-card:hover {
+            max-height: 300px; /* Altura para expandir e mostrar tudo */
+            background-color: #374d68; /* Feedback visual no hover */
+        }
+
+        #column-archive .kanban-card:hover .card-tags,
+        #column-archive .kanban-card:hover .card-details,
+        #column-archive .kanban-card:hover .archived-info {
+            visibility: visible; /* Mostra os detalhes no hover */
+            opacity: 1;
+        }
+        
+        /* --- ESTILOS DA NOVA FUNCIONALIDADE DE E-MAIL --- */
+        #send-email-btn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #send-email-btn:hover {
+            background-color: #0056b3;
+        }
+        #send-email-btn:disabled {
+            background-color: #556a85;
+            cursor: not-allowed;
+        }
+
+        .card-selection-checkbox {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            transform: scale(1.4);
+            cursor: pointer;
+            z-index: 3; /* Para ficar acima de outros elementos */
+        }
+
+        /* Estilo para destacar o card selecionado */
+        .kanban-card.selected {
+            border-left-color: #007bff !important; /* Usa !important para sobrepor outros estilos de borda */
+            box-shadow: 0 0 12px rgba(0, 123, 255, 0.6);
+            background-color: #374d68;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-container">
+        <div class="bg-animation">
+            <canvas id="bg-canvas"></canvas>
+        </div>
+        <div id="login-box">
+            <h2>FlowDesk</h2>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" id="login-btn">Entrar</button>
+                <div id="error-message"></div>
+                <a href="#" id="forgot-password-link">Esqueceu a senha?</a>
+            </form>
+            <div class="dev-credit-login">developed by dmoreschi</div>
+        </div>
+    </div>
+
+    <div id="reset-modal" class="modal">
+        <div id="reset-box">
+            <h2>Redefinir Senha</h2>
+            <p>Insira seu e-mail para receber um link de redefinição.</p>
+            <form id="reset-form">
+                <div class="input-group">
+                    <label for="reset-email">E-mail</label>
+                    <input type="email" id="reset-email" required>
+                </div>
+                <button type="submit" id="reset-btn">Enviar Link</button>
+                <button type="button" id="cancel-reset-btn">Cancelar</button>
+                <div id="reset-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-container">
+        <header>
+            <h1><i class="fas fa-stream"></i> FlowDesk</h1>
+            <div class="header-controls">
+                <div class="dev-credit">developed by dmoreschi</div>
+                <div id="notification-bell" class="notification-container">
+                    <i class="fas fa-bell"></i>
+                    <span id="notification-count" class="notification-badge" style="display: none;"></span>
+                </div>
+            </div>
+        </header>
+
+        <div class="filter-container">
+            <div class="filter-group">
+                <label for="responsible-filter"><i class="fas fa-user-friends"></i> Responsável:</label>
+                <select id="responsible-filter"></select>
+            </div>
+            <div class="filter-group">
+                <label for="criticity-filter"><i class="fas fa-exclamation-triangle"></i> Criticidade:</label>
+                <select id="criticity-filter">
+                    <option value="">Todas</option>
+                    <option value="1">Nível 1</option>
+                    <option value="2">Nível 2</option>
+                    <option value="3">Nível 3</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <input type="checkbox" id="overdue-filter">
+                <label for="overdue-filter"><i class="fas fa-calendar-times"></i> Apenas Atrasados</label>
+            </div>
+            <div class="filter-group" style="flex-grow: 1; display: flex; justify-content: flex-end;">
+                <button id="send-email-btn" style="display: none; margin-left: auto;"><i class="fas fa-paper-plane"></i> Enviar e-mail dos cards selecionados</button>
+           </div>
+        </div>
+
+        <main class="kanban-board">
+            <div class="kanban-column" id="column-backlog" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div class="column-header"><h2><i class="fas fa-inbox"></i> À Fazer</h2></div>
+                <div class="kanban-cards" id="cards-backlog"></div>
+                <button class="add-card-button" onclick="addCard('backlog')"><i class="fas fa-plus"></i> Adicionar Card</button>
+            </div>
+            <div class="kanban-column" id="column-pending" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div class="column-header"><h2><i class="fas fa-pause-circle"></i> Pendente</h2></div>
+                <div class="kanban-cards" id="cards-pending"></div>
+                <button class="add-card-button" onclick="addCard('pending')"><i class="fas fa-plus"></i> Adicionar Card</button>
+            </div>
+            <div class="kanban-column" id="column-ongoing" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div class="column-header"><h2><i class="fas fa-cogs"></i> Em Andamento</h2></div>
+                <div class="kanban-cards" id="cards-ongoing"></div>
+                <button class="add-card-button" onclick="addCard('ongoing')"><i class="fas fa-plus"></i> Adicionar Card</button>
+            </div>
+            <div class="kanban-column" id="column-completed" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div class="column-header"><h2><i class="fas fa-check-circle"></i> Concluído</h2></div>
+                <div class="kanban-cards" id="cards-completed"></div>
+            </div>
+            <div class="kanban-column" id="column-done" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div class="column-header"><h2><i class="fas fa-chart-pie"></i> Gerencial</h2></div>
+                <div class="kanban-cards" id="cards-done"></div>
+                <div class="chart-pie-container">
+                    <canvas id="overall-pie-chart"></canvas>
+                </div>
+            </div>
+            <div class="summary-column">
+                <div id="criticity-summary"></div>
+            </div>
+
+            <div class="kanban-column" id="column-archive" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <div class="column-header"><h2><i class="fas fa-archive"></i> Arquivo</h2></div>
+                <div class="archive-search-container">
+                    <input type="text" id="archive-search-title" placeholder="Buscar por título..." onkeyup="renderArchiveColumn()">
+                    <select id="archive-search-responsible" onchange="renderArchiveColumn()"></select>
+                    <select id="archive-search-criticity" onchange="renderArchiveColumn()">
+                        <option value="">Toda Criticidade</option>
+                        <option value="1">Nível 1</option>
+                        <option value="2">Nível 2</option>
+                        <option value="3">Nível 3</option>
+                    </select>
+                </div>
+                <div class="kanban-cards" id="cards-archive"></div>
+            </div>
+
+        </main>
+
+        <div id="chart-container">
+            <h2>Performance da Equipe (Tarefas por Status)</h2>
+            <div id="chart-legend">
+                <span class="legend-item"><i class="fas fa-circle backlog-color"></i> À fazer</span>
+                <span class="legend-item"><i class="fas fa-circle pending-color"></i> Pendente</span>
+                <span class="legend-item"><i class="fas fa-circle ongoing-color"></i> Em andamento</span>
+                <span class="legend-item"><i class="fas fa-circle completed-color"></i> Concluído</span>
+            </div>
+            <div id="bar-chart"></div>
+        </div>
+
+        <div id="data-table-container">
+            <div class="section-header">
+                <h2>Resumo Detalhado</h2>
+                <div class="export-buttons">
+                    <button id="export-csv-btn" class="export-btn"><i class="fas fa-file-csv"></i> Exportar CSV</button>
+                    <button id="export-xls-btn" class="export-btn"><i class="fas fa-file-excel"></i> Exportar XLS</button>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <th>Responsável</th><th>Título</th><th>Flag</th><th>Status</th><th>Descrição</th><th>Checklist</th>
+                            <th>Data Início</th><th>Data Conclusão Prevista</th><th>Data Conclusão Real</th><th>Atraso (dias)</th><th>Reprogramado?</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="card-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title" contenteditable="true"></h2>
+                <span class="close-button" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="section">
+                    <h3><i class="fas fa-tags"></i> Tags</h3>
+                    <div id="modal-tags"></div>
+                    <div class="tag-options-container">
+                        <button class="tag-option" onclick="addTagToModal('DRN')">DRN</button>
+                        <button class="tag-option" onclick="addTagToModal('Projeto')">Projeto</button>
+                        <button class="tag-option" onclick="addTagToModal('Ação')">Ação</button>
+                        <button class="tag-option" onclick="addTagToModal('Demanda')">Demanda</button>
+                        <button class="tag-option" onclick="addTagToModal('Reprogramado sim')">Reprogramado sim</button>
+                        <button class="tag-option" onclick="addTagToModal('Reprogramado não')">Reprogramado não</button>
+                    </div>
+                </div>
+                <div class="section">
+                    <h3><i class="fas fa-user-friends"></i> Responsáveis</h3>
+                    <div id="modal-responsibles"></div>
+                    <div class="tag-options-container" id="responsible-options"></div>
+                </div>
+                <div class="section">
+                    <h3><i class="fas fa-align-left"></i> Descrição</h3>
+                    <div id="modal-description" class="description-box" contenteditable="true"></div>
+                </div>
+                <div class="section">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Nível de Criticidade</h3>
+                    <div class="criticity-options-container" id="criticity-options"></div>
+                </div>
+                <div class="section">
+                    <h3><i class="fas fa-calendar-alt"></i> Prazos</h3>
+                    <div class="date-fields">
+                        <div><label for="modal-startDate">Data de Início</label><input type="date" id="modal-startDate"></div>
+                        <div><label for="modal-endDate">Data de Fim Prevista</label><input type="date" id="modal-endDate"></div>
+                    </div>
+                    <button id="replan-dates-btn"><i class="fas fa-sync-alt"></i> Replicar Data Fim Prevista</button>
+                    </div>
+                <div class="section">
+                    <h3><i class="fas fa-tasks"></i> Checklist <span id="checklist-progress-text"></span></h3>
+                    <div id="modal-checklist"></div>
+                    <div class="checklist-input-row">
+                        <input type="text" id="new-checklist-item" placeholder="Adicionar novo item...">
+                        <input type="date" id="new-checklist-startDate" title="Data de início do item">
+                        <input type="date" id="new-checklist-endDate" title="Data de fim do item">
+                        <button onclick="addChecklistItem()"><i class="fas fa-plus"></i> Adicionar</button>
+                    </div>
+                </div>
+                <div class="section">
+                    <h3><i class="fas fa-check"></i> Status de Conclusão</h3>
+                    <div class="completion-status">
+                        <input type="checkbox" id="modal-isComplete" onchange="toggleManualCompletion()">
+                        <label for="modal-isComplete">Marcar Card como Concluído</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notifications-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-header-title">
+                    <i class="fas fa-bell"></i><h2>Notificações</h2>
+                </div>
+                <button id="clear-all-notifications-btn" class="clear-all-btn">Limpar Tudo</button>
+            </div>
+            <div id="notifications-list"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <script>
+        // CÓDIGO ATUALIZADO
+        const firebaseConfig = {
+            apiKey: "AIzaSyDIbRAzE_SB-ny-ha9WFS3KUZl7lvqvQ6M",
+            authDomain: "flowdesk-roots.firebaseapp.com",
+            projectId: "flowdesk-roots",
+            storageBucket: "flowdesk-roots.firebasestorage.app",
+            messagingSenderId: "525313436427",
+            appId: "1:525313436427:web:e551f8611cbb29292e500e",
+            measurementId: "G-PZQXH2KSK5"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        Chart.register(ChartDataLabels);
+
+        const responsibleList = [ 'Diogo Moreschi' ];
+        const userEmailToNameMap = {
+            'diogolmoreschi@gmail.com': 'Diogo Moreschi'
+        };
+        const statusNameMap = {
+            backlog: 'À fazer',
+            pending: 'Pendente',
+            ongoing: 'Em andamento',
+            completed: 'Concluído',
+            done: 'Gerencial',
+            archive: 'Arquivado'
+        };
+        let currentUserName = null; 
+        let kanbanData = { 'backlog': [], 'pending': [], 'ongoing': [], 'completed': [], 'done': [], 'archive': [] };
+        let currentCardId = null;
+        let currentColumnId = null;
+        let unsubscribeNotifications = null;
+        let pieChartInstance = null;
+        let selectedCards = new Set(); // Armazena os IDs dos cards selecionados
+
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particlesArray;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) { this.x = x; this.y = y; this.directionX = directionX; this.directionY = directionY; this.size = size; this.color = color; }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false); ctx.fillStyle = this.color; ctx.fill(); }
+            update() { if (this.x > canvas.width || this.x < 0) { this.directionX = -this.directionX; } if (this.y > canvas.height || this.y < 0) { this.directionY = -this.directionY; } this.x += this.directionX; this.y += this.directionY; this.draw(); }
+        }
+
+        function initNetworkAnimation() {
+            resizeCanvas();
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 2) + 1;
+                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                let directionX = (Math.random() * .4) - 0.2;
+                let directionY = (Math.random() * .4) - 0.2;
+                let color = 'rgba(0, 123, 255, 0.8)';
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        function connectParticles() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+                        opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = `rgba(61, 85, 115, ${opacityValue})`;
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([5, 15]);
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                }
+            }
+        }
+
+        let animationFrameId;
+        function animateNetwork() {
+            ctx.clearRect(0, 0, innerWidth, innerHeight);
+            for (let i = 0; i < particlesArray.length; i++) { particlesArray[i].update(); }
+            connectParticles();
+            animationFrameId = requestAnimationFrame(animateNetwork);
+        }
+
+        function stopAnimation() { if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; } }
+        
+        function getFilteredData() {
+            const selectedResponsible = document.getElementById('responsible-filter').value;
+            const selectedCriticity = document.getElementById('criticity-filter').value;
+            const showOverdueOnly = document.getElementById('overdue-filter').checked;
+            const filteredData = { 'backlog': [], 'pending': [], 'ongoing': [], 'completed': [], 'done': [] };
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            for (const columnId in filteredData) {
+                let cards = kanbanData[columnId];
+                if (selectedResponsible) { cards = cards.filter(card => card.responsibles && card.responsibles.includes(selectedResponsible)); }
+                if (selectedCriticity) { cards = cards.filter(card => card.criticidade == selectedCriticity); }
+                if (showOverdueOnly && columnId !== 'done' && columnId !== 'completed') {
+                    cards = cards.filter(card => {
+                        if (!card.endDate) return false;
+                        const cardEndDate = new Date(card.endDate + 'T00:00:00');
+                        return cardEndDate < today;
+                    });
+                } else if (showOverdueOnly && (columnId === 'done' || columnId === 'completed')) { cards = []; }
+                filteredData[columnId] = cards;
+            }
+            return filteredData;
+        }
+
+        function renderFilteredViews() {
+            const filteredData = getFilteredData();
+            renderCards(filteredData);
+            renderPerformanceChart(filteredData);
+            renderDataTable(filteredData);
+            renderOverallPieChart(filteredData); 
+            renderCriticityCount(filteredData);
+            renderArchiveColumn();
+        }
+
+        async function createNotification(recipientName, message) { try { if (recipientName === currentUserName) return; await db.collection('notifications').add({ recipientName: recipientName, message: message, read: false, timestamp: firebase.firestore.FieldValue.serverTimestamp() }); } catch (error) { console.error("Erro ao criar notificação: ", error); } }
+        function listenForNotifications() { if (!currentUserName) return; if (unsubscribeNotifications) unsubscribeNotifications(); const notificationsQuery = db.collection('notifications').where('recipientName', '==', currentUserName).where('read', '==', false).orderBy('timestamp', 'desc'); unsubscribeNotifications = notificationsQuery.onSnapshot(snapshot => { const countBadge = document.getElementById('notification-count'); const list = document.getElementById('notifications-list'); const unreadCount = snapshot.size; if (unreadCount > 0) { countBadge.textContent = unreadCount; countBadge.style.display = 'flex'; } else { countBadge.style.display = 'none'; } list.innerHTML = ''; if (snapshot.empty) { list.innerHTML = '<div class="no-notifications">Nenhuma notificação nova</div>'; } else { snapshot.forEach(doc => { const notification = doc.data(); const item = document.createElement('div'); item.className = 'notification-item'; const date = notification.timestamp ? notification.timestamp.toDate().toLocaleString('pt-BR') : ''; item.innerHTML = `<p>${notification.message}<span class="timestamp">${date}</span></p><button class="mark-read-btn" data-doc-id="${doc.id}" title="Marcar como lida">&times;</button>`; list.appendChild(item); }); } }); }
+        async function markNotificationAsRead(docId) { if (!docId) { return; } try { await db.collection('notifications').doc(docId).update({ read: true }); } catch (error) { console.error("Erro ao marcar notificação como lida: ", error); throw error; } }
+        async function markAllNotificationsAsRead() { if (!currentUserName) return; const query = db.collection('notifications').where('recipientName', '==', currentUserName).where('read', '==', false); try { const snapshot = await query.get(); if (snapshot.empty) return; const batch = db.batch(); snapshot.forEach(doc => { batch.update(doc.ref, { read: true }); }); await batch.commit(); } catch (error) { console.error("Erro ao limpar todas as notificações: ", error); } }
+        function openNotificationsModal() { document.getElementById('notifications-modal').style.display = 'flex'; }
+        function closeNotificationsModal() { document.getElementById('notifications-modal').style.display = 'none'; }
+        function listenForRealtimeUpdates() { db.collection("kanban").onSnapshot((snapshot) => { kanbanData = { 'backlog': [], 'pending': [], 'ongoing': [], 'completed': [], 'done': [], 'archive': [] }; snapshot.forEach((doc) => { if (kanbanData.hasOwnProperty(doc.id)) { kanbanData[doc.id] = doc.data().cards || []; } }); renderFilteredViews(); }, (error) => { console.error("Erro ao ouvir o banco de dados: ", error); alert("Erro de conexão com o banco de dados."); }); }
+        async function updateColumnInFirebase(columnId, cardsArray) { try { await db.collection("kanban").doc(columnId).set({ cards: cardsArray }); } catch (error) { console.error(`Erro ao atualizar a coluna ${columnId}:`, error); } }
+        async function updateCardInFirebase(cardId, columnId, updatedCard) { if (!columnId || !cardId) return; const cardsInColumn = [...kanbanData[columnId]]; const cardIndex = cardsInColumn.findIndex(c => c.id === cardId); if (cardIndex > -1) { cardsInColumn[cardIndex] = updatedCard; await updateColumnInFirebase(columnId, cardsInColumn); } }
+        function openModal(cardId, columnId) { const modal = document.getElementById('card-modal'); modal.style.display = 'flex'; const card = kanbanData[columnId]?.find(c => c.id === cardId); if (card) { currentCardId = cardId; currentColumnId = columnId; document.getElementById('modal-title').innerText = card.title; document.getElementById('modal-description').innerText = card.description || 'Adicione uma descrição mais detalhada...'; document.getElementById('modal-startDate').value = card.startDate || ''; document.getElementById('modal-endDate').value = card.endDate || ''; document.getElementById('modal-isComplete').checked = card.isComplete || false; renderTags(card.tags); renderResponsibles(card.responsibles); renderChecklist(card.checklist); renderCriticityOptions(card.criticidade); updateCardProgress(card); } }
+        async function closeModal() { try { await saveModalChanges(); } catch (error) { console.error("Erro ao salvar alterações ao fechar o modal:", error); } finally { document.getElementById('card-modal').style.display = 'none'; currentCardId = null; currentColumnId = null; } }
+        async function saveModalChanges() { if (!currentColumnId || !currentCardId) return; const cardsInColumn = [...kanbanData[currentColumnId]]; const cardIndex = cardsInColumn.findIndex(c => c.id === currentCardId); if (cardIndex > -1) { const card = { ...cardsInColumn[cardIndex] }; card.title = document.getElementById('modal-title').innerText; card.description = document.getElementById('modal-description').innerText; card.startDate = document.getElementById('modal-startDate').value; card.endDate = document.getElementById('modal-endDate').value; if (!card.checklist || card.checklist.length === 0) { const isComplete = document.getElementById('modal-isComplete').checked; if (card.isComplete !== isComplete) { card.isComplete = isComplete; card.completionDate = isComplete ? new Date().toISOString().split('T')[0] : null; } } cardsInColumn[cardIndex] = card; await updateColumnInFirebase(currentColumnId, cardsInColumn); } }
+        function setCriticity(level) { if (!currentCardId || !currentColumnId) return; const cardIndex = kanbanData[currentColumnId].findIndex(c => c.id === currentCardId); if (cardIndex > -1) { kanbanData[currentColumnId][cardIndex].criticidade = level; renderCriticityOptions(level); } }
+        function renderCriticityOptions(currentLevel) { const container = document.getElementById('criticity-options'); if (!container) return; container.innerHTML = `<button class="criticity-option crit-1 ${currentLevel === 1 ? 'active' : ''}" onclick="setCriticity(1)">Nível 1</button><button class="criticity-option crit-2 ${currentLevel === 2 ? 'active' : ''}" onclick="setCriticity(2)">Nível 2</button><button class="criticity-option crit-3 ${currentLevel === 3 ? 'active' : ''}" onclick="setCriticity(3)">Nível 3</button>`; }
+        async function updateCardCompletionStatus(card) { if (!card) return; const checklist = card.checklist || []; let isComplete = false; if (checklist.length > 0) { isComplete = checklist.every(item => item.concluido); document.getElementById('modal-isComplete').checked = isComplete; } else { isComplete = document.getElementById('modal-isComplete').checked; } if (isComplete !== card.isComplete) { card.completionDate = isComplete ? new Date().toISOString().split('T')[0] : null; card.isComplete = isComplete; await updateCardInFirebase(card.id, currentColumnId, card); } }
+        async function toggleManualCompletion() { const card = kanbanData[currentColumnId]?.find(c => c.id === currentCardId); if(card && (!card.checklist || card.checklist.length === 0)) { await updateCardCompletionStatus({ ...card }); } }
+        async function addTagToModal(tag) { const card = kanbanData[currentColumnId].find(c => c.id === currentCardId); if (card && (!card.tags || !card.tags.includes(tag))) { if (!card.tags) card.tags = []; card.tags.push(tag); renderTags(card.tags); await updateCardInFirebase(card.id, currentColumnId, card); } }
+        async function removeTagFromModal(tag) { const card = kanbanData[currentColumnId].find(c => c.id === currentCardId); if (card && card.tags) { card.tags = card.tags.filter(t => t !== tag); renderTags(card.tags); await updateCardInFirebase(card.id, currentColumnId, card); } }
+        async function addResponsibleToModal(name) {  const card = kanbanData[currentColumnId].find(c => c.id === currentCardId);  if (card && (!card.responsibles || !card.responsibles.includes(name))) { const existingResponsibles = [...(card.responsibles || [])]; if (!card.responsibles) card.responsibles = [];  card.responsibles.push(name);  renderResponsibles(card.responsibles);  await updateCardInFirebase(card.id, currentColumnId, card); const actor = currentUserName || 'Alguém'; const messageForAddedUser = `${actor} adicionou você ao cartão: "${card.title}"`; createNotification(name, messageForAddedUser); if (name !== 'Diogo Moreschi') { const messageForOthers = `${actor} adicionou ${name} ao cartão: "${card.title}"`; existingResponsibles.forEach(responsible => { if (responsible !== actor) { createNotification(responsible, messageForOthers); } }); } }  }
+        async function removeResponsibleFromModal(name) {  const card = kanbanData[currentColumnId].find(c => c.id === currentCardId);  if (card && card.responsibles) {  card.responsibles = card.responsibles.filter(n => n !== name);  renderResponsibles(card.responsibles);  await updateCardInFirebase(card.id, currentColumnId, card); const actor = currentUserName || 'Alguém'; const messageForRemovedUser = `${actor} removeu você do cartão: "${card.title}"`; createNotification(name, messageForRemovedUser); const messageForOthers = `${actor} removeu ${name} do cartão: "${card.title}"`; card.responsibles.forEach(responsible => { if (responsible !== actor) { createNotification(responsible, messageForOthers); } }); }  }
+        async function addChecklistItem() { const itemInput = document.getElementById('new-checklist-item'); const startDateInput = document.getElementById('new-checklist-startDate'); const endDateInput = document.getElementById('new-checklist-endDate'); const text = itemInput.value.trim(); if (text && currentCardId) { const card = kanbanData[currentColumnId].find(c => c.id === currentCardId); if (card) { if (!card.checklist) card.checklist = []; card.checklist.push({ texto: text, concluido: false, startDate: startDateInput.value || null, endDate: endDateInput.value || null }); itemInput.value = ''; startDateInput.value = ''; endDateInput.value = ''; renderChecklist(card.checklist); updateCardProgress(card); await updateCardCompletionStatus(card); } } }
+        async function updateChecklistItem(idx, newText) { const card = kanbanData[currentColumnId]?.find(c => c.id === currentCardId); if (card && card.checklist && card.checklist[idx]) { card.checklist[idx].texto = newText; await updateCardInFirebase(card.id, currentColumnId, card); } }
+        async function saveChecklistItemDate(idx, newStartDate, newEndDate) { const card = kanbanData[currentColumnId]?.find(c => c.id === currentCardId); if (card && card.checklist && card.checklist[idx]) { card.checklist[idx].startDate = newStartDate; card.checklist[idx].endDate = newEndDate; await updateCardInFirebase(card.id, currentColumnId, card); renderChecklist(card.checklist); } }
+        function editChecklistItemDate(idx) { const itemRow = document.querySelector(`.checklist-item-row[data-idx="${idx}"]`); if(!itemRow) return; const dateSpan = itemRow.querySelector('.checklist-date-range'); const card = kanbanData[currentColumnId]?.find(c => c.id === currentCardId); if(!dateSpan || !card || !card.checklist[idx]) return; const item = card.checklist[idx]; const dateEditor = document.createElement('div'); dateEditor.className = 'checklist-date-editor'; dateEditor.innerHTML = `<input type="date" value="${item.startDate || ''}"><input type="date" value="${item.endDate || ''}"><button>OK</button>`; dateEditor.querySelector('button').onclick = () => { const inputs = dateEditor.querySelectorAll('input'); saveChecklistItemDate(idx, inputs[0].value || null, inputs[1].value || null); }; dateSpan.replaceWith(dateEditor); }
+        async function toggleChecklistItem(idx) { const c = kanbanData[currentColumnId].find(c => c.id === currentCardId); if (c && c.checklist) { c.checklist[idx].concluido = !c.checklist[idx].concluido; renderChecklist(c.checklist); updateCardProgress(c); await updateCardCompletionStatus(c); } }
+        async function removeChecklistItem(idx) { const c = kanbanData[currentColumnId].find(c => c.id === currentCardId); if (c && c.checklist) { if (confirm('Tem certeza?')) { c.checklist.splice(idx, 1); renderChecklist(c.checklist); updateCardProgress(c); await updateCardCompletionStatus(c); } } }
+        function renderTags(tags) { const c = document.getElementById('modal-tags'); c.innerHTML = ''; if (tags) { tags.forEach(t => { let tc = ''; if (t.toLowerCase() === 'drn') tc = 'tag-drn'; if (t.toLowerCase() === 'projeto') tc = 'tag-projeto'; if (t.toLowerCase() === 'ação') tc = 'tag-acao'; if (t.toLowerCase() === 'demanda') tc = 'tag-demanda'; c.innerHTML += `<span class="card-tag ${tc}">${t} <button onclick="removeTagFromModal('${t}')">&times;</button></span>`; }); } }
+        function renderResponsibles(r) { const c = document.getElementById('modal-responsibles'); c.innerHTML = ''; if (r) { r.forEach(n => { c.innerHTML += `<span class="card-tag" style="background-color: #556a85;">${n} <button onclick="removeResponsibleFromModal('${n}')">&times;</button></span>`; }); } }
+        
+        // --- FUNÇÃO DE RENDERIZAÇÃO DO CHECKLIST ATUALIZADA ---
+        function renderChecklist(checklist) {
+            const container = document.getElementById('modal-checklist');
+            container.innerHTML = '';
+            if (checklist) {
+                checklist.forEach((item, idx) => {
+                    const itemRow = document.createElement('div');
+                    itemRow.className = 'checklist-item-row';
+                    itemRow.dataset.idx = idx;
+
+                    let dateRangeHtml = '';
+                    if (item.startDate || item.endDate) {
+                        const startDate = item.startDate ? formatDate(item.startDate) : '...';
+                        const endDate = item.endDate ? formatDate(item.endDate) : '...';
+                        dateRangeHtml = `<span class="checklist-date-range" onclick="editChecklistItemDate(${idx})">${startDate} → ${endDate}</span>`;
+                    } else {
+                        dateRangeHtml = `<span class="checklist-date-range" onclick="editChecklistItemDate(${idx})">Definir data</span>`;
+                    }
+
+                    const moveUpButton = idx > 0 ? `<button class="checklist-move-btn" onclick="moveChecklistItem(${idx}, 'up')" title="Mover para cima">▲</button>` : '';
+                    const moveDownButton = idx < checklist.length - 1 ? `<button class="checklist-move-btn" onclick="moveChecklistItem(${idx}, 'down')" title="Mover para baixo">▼</button>` : '';
+
+                    itemRow.innerHTML = `
+                        <input type="checkbox" ${item.concluido ? 'checked' : ''} onchange="toggleChecklistItem(${idx})">
+                        <span class="checklist-text ${item.concluido ? 'completed-text' : ''}" contenteditable="true" onblur="updateChecklistItem(${idx}, this.innerText)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">${item.texto}</span>
+                        ${dateRangeHtml}
+                        <div class="checklist-controls">
+                            ${moveUpButton}
+                            ${moveDownButton}
+                            <button class="remove-item-button" onclick="removeChecklistItem(${idx})">&times;</button>
+                        </div>
+                    `;
+                    container.appendChild(itemRow);
+                });
+            }
+        }
+
+        // --- NOVA FUNÇÃO PARA MOVER ITENS DO CHECKLIST ---
+        async function moveChecklistItem(index, direction) {
+            const card = kanbanData[currentColumnId]?.find(c => c.id === currentCardId);
+            if (!card || !card.checklist) return;
+
+            const reorderedChecklist = [...card.checklist];
+
+            if (direction === 'up' && index > 0) {
+                [reorderedChecklist[index - 1], reorderedChecklist[index]] = [reorderedChecklist[index], reorderedChecklist[index - 1]];
+            } else if (direction === 'down' && index < reorderedChecklist.length - 1) {
+                [reorderedChecklist[index + 1], reorderedChecklist[index]] = [reorderedChecklist[index], reorderedChecklist[index + 1]];
+            }
+
+            card.checklist = reorderedChecklist;
+            renderChecklist(card.checklist);
+            await updateCardInFirebase(currentCardId, currentColumnId, card);
+        }
+
+        function updateCardProgress(c) { const cl = c.checklist || []; const t = cl.length; const co = cl.filter(i => i.concluido).length; let p = (t > 0) ? Math.round((co / t) * 100) : 0; document.getElementById('checklist-progress-text').innerText = `(${co}/${t}) ${p}%`; }
+        function getInitials(n) { if (!n) return ''; const ns = n.split(' '); return (ns.length === 1) ? ns[0].substring(0, 2).toUpperCase() : (ns[0][0] + ns[ns.length - 1][0]).toUpperCase(); }
+        function formatDate(d) { if (!d) return ''; const [y, m, day] = d.split('-'); return `${day}/${m}/${y}`; }
+        
+        function createCardElement(cardObj, columnId) {
+            const card = document.createElement('div');
+            card.className = 'kanban-card';
+            if (selectedCards.has(cardObj.id)) {
+                card.classList.add('selected');
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let isOverdue = false;
+            if (cardObj.endDate && columnId !== 'done' && columnId !== 'completed' && columnId !== 'archive') {
+                const cardEndDate = new Date(cardObj.endDate + 'T00:00:00');
+                if (cardEndDate < today) {
+                    isOverdue = true;
+                }
+            }
+            if (isOverdue) { card.classList.add('overdue'); }
+            if (cardObj.isComplete) { card.classList.add('completed'); }
+
+            card.setAttribute('draggable', columnId !== 'archive');
+            card.dataset.cardId = cardObj.id;
+            card.dataset.columnId = columnId;
+            
+            card.onclick = (e) => {
+                if (!e.target.classList.contains('card-selection-checkbox')) {
+                    openModal(cardObj.id, columnId);
+                }
+            };
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'card-selection-checkbox';
+            checkbox.checked = selectedCards.has(cardObj.id);
+            checkbox.onclick = (e) => {
+                e.stopPropagation();
+                toggleCardSelection(cardObj.id);
+            };
+
+            let tagsHtml = '';
+            if (cardObj.tags && cardObj.tags.length > 0) {
+                tagsHtml = '<div class="card-tags">';
+                cardObj.tags.forEach(t => {
+                    let tc = '';
+                    if (t.toLowerCase() === 'drn') tc = 'tag-drn';
+                    if (t.toLowerCase() === 'projeto') tc = 'tag-projeto';
+                    if (t.toLowerCase() === 'ação') tc = 'tag-acao';
+                    if (t.toLowerCase() === 'demanda') tc = 'tag-demanda';
+                    tagsHtml += `<span class="card-tag ${tc}">${t}</span>`;
+                });
+                tagsHtml += '</div>';
+            }
+            let phtml = '', ptext = '';
+            if (cardObj.checklist && cardObj.checklist.length > 0) {
+                const t = cardObj.checklist.length, c = cardObj.checklist.filter(i => i.concluido).length, p = Math.round((c / t) * 100);
+                ptext = `<span><i class="fas fa-tasks"></i> ${c}/${t}</span>`;
+                phtml = `<div class="progress-bar-container"><div class="progress-bar" style="width: ${p}%;"></div></div>`;
+            }
+            let dateHtml = cardObj.endDate ? `<span class="date ${isOverdue ? 'overdue-date-text' : ''}"><i class="far fa-calendar-alt"></i> ${formatDate(cardObj.endDate)}</span>` : '';
+            let respHtml = '';
+            if (cardObj.responsibles && cardObj.responsibles.length > 0) {
+                respHtml += '<div class="card-responsibles">';
+                cardObj.responsibles.forEach(n => {
+                    respHtml += `<div class="avatar" title="${n}">${getInitials(n)}</div>`;
+                });
+                respHtml += '</div>';
+            }
+            let criticityHtml = '';
+            if (cardObj.criticidade) {
+                criticityHtml = `<span class="card-criticity-indicator crit-${cardObj.criticidade}" title="Nível de Criticidade ${cardObj.criticidade}"><i class="fas fa-exclamation-triangle"></i></span>`;
+            }
+            let archiveInfoHtml = '';
+            if (columnId === 'archive' && cardObj.archivedBy) {
+                const archivedDate = cardObj.archivedAt ? new Date(cardObj.archivedAt).toLocaleString('pt-BR') : 'data desconhecida';
+                archiveInfoHtml = `<div class="archived-info">Arquivado por: ${cardObj.archivedBy}<br>Em: ${archivedDate}</div>`;
+            }
+            const removeButtonHtml = columnId !== 'archive' ? `<button class="remove-button" onclick="event.stopPropagation(); removeCard('${columnId}', '${cardObj.id}')">&times;</button>` : '';
+            
+            const innerContent = document.createElement('div');
+            innerContent.innerHTML = `<div class="card-header"><h3 class="title">${cardObj.title}</h3>${removeButtonHtml}</div>${tagsHtml}<div class="card-details">${cardObj.description ? `<span><i class="fas fa-align-left"></i></span>` : ''}${dateHtml}${ptext}${criticityHtml} ${phtml}${respHtml}</div>${archiveInfoHtml}`;
+            
+            card.appendChild(checkbox);
+            card.appendChild(innerContent);
+
+            card.addEventListener('dragstart', dragStart);
+            card.addEventListener('dragend', dragEnd);
+            return card;
+        }
+
+        function renderCards(dataToRender) { for (const columnId in dataToRender) { const c = document.getElementById(`cards-${columnId}`); if (c) { c.innerHTML = ''; dataToRender[columnId].forEach(co => { c.appendChild(createCardElement(co, columnId)); }); } } }
+        async function addCard(columnId) { const title = prompt("Título do novo cartão:"); if (!title) return; const newCard = { id: Date.now().toString(), title, description: '', tags: [], checklist: [], responsibles: [], startDate: '', endDate: '', isComplete: false, completionDate: null, criticidade: null }; const updatedCards = [...(kanbanData[columnId] || []), newCard]; await updateColumnInFirebase(columnId, updatedCards); }
+        async function removeCard(columnId, cardIdToRemove) { if (confirm("Tem certeza que deseja remover este cartão?")) { const updatedCards = kanbanData[columnId].filter(c => c.id !== cardIdToRemove); await updateColumnInFirebase(columnId, updatedCards); } }
+        function renderPerformanceChart(dataToRender) { const chartElement = document.getElementById('bar-chart'); chartElement.innerHTML = ''; const stats = {}; const columnsToInclude = ['backlog', 'pending', 'ongoing', 'completed']; responsibleList.forEach(name => { stats[name] = { backlog: 0, pending: 0, ongoing: 0, completed: 0, total: 0 }; }); columnsToInclude.forEach(columnId => { (dataToRender[columnId] || []).forEach(card => { const taskCount = (card.checklist && card.checklist.length > 0) ? card.checklist.length : 1; (card.responsibles || []).forEach(name => { if (stats[name]) { if (columnsToInclude.includes(columnId)) { stats[name][columnId] += taskCount; stats[name].total += taskCount; } } }); }); }); for (const name in stats) { const personStats = stats[name]; if(personStats.total === 0) continue; const totalPersonTasks = personStats.total; const backlogHeight = totalPersonTasks > 0 ? (personStats.backlog / totalPersonTasks) * 100 : 0; const pendingHeight = totalPersonTasks > 0 ? (personStats.pending / totalPersonTasks) * 100 : 0; const ongoingHeight = totalPersonTasks > 0 ? (personStats.ongoing / totalPersonTasks) * 100 : 0; const completedHeight = totalPersonTasks > 0 ? (personStats.completed / totalPersonTasks) * 100 : 0; const barWrapper = document.createElement('div'); barWrapper.className = 'bar-wrapper'; barWrapper.innerHTML = `<div class="bar-group"><div class="bar backlog" style="height: ${backlogHeight}%;" data-height="${Math.round(backlogHeight)}" title="À fazer: ${Math.round(backlogHeight)}% (${personStats.backlog} tarefas)"><span class="bar-value">${Math.round(backlogHeight)}%</span></div><div class="bar pending" style="height: ${pendingHeight}%;" data-height="${Math.round(pendingHeight)}" title="Pendente: ${Math.round(pendingHeight)}% (${personStats.pending} tarefas)"><span class="bar-value">${Math.round(pendingHeight)}%</span></div><div class="bar ongoing" style="height: ${ongoingHeight}%;" data-height="${Math.round(ongoingHeight)}" title="Em andamento: ${Math.round(ongoingHeight)}% (${personStats.ongoing} tarefas)"><span class="bar-value">${Math.round(ongoingHeight)}%</span></div><div class="bar completed" style="height: ${completedHeight}%;" data-height="${Math.round(completedHeight)}" title="Concluído: ${Math.round(completedHeight)}% (${personStats.completed} tarefas)"><span class="bar-value">${Math.round(completedHeight)}%</span></div></div><div class="bar-label">${name.split(' ')[0]}</div>`; chartElement.appendChild(barWrapper); } }
+        function renderCriticityCount(dataToRender) { const container = document.getElementById('criticity-summary'); if (!container) return; const counts = { 1: 0, 2: 0, 3: 0 }; for (const columnId in dataToRender) { dataToRender[columnId].forEach(card => { if (card.criticidade && counts.hasOwnProperty(card.criticidade)) { counts[card.criticidade]++; } }); } container.innerHTML = `<h3>Cards por Criticidade</h3><div class="criticity-summary-item"><span class="crit-1"><i class="fas fa-exclamation-triangle"></i> Nível 1</span><span class="count">${counts[1]}</span></div><div class="criticity-summary-item"><span class="crit-2"><i class="fas fa-exclamation-triangle"></i> Nível 2</span><span class="count">${counts[2]}</span></div><div class="criticity-summary-item"><span class="crit-3"><i class="fas fa-exclamation-triangle"></i> Nível 3</span><span class="count">${counts[3]}</span></div>`; }
+        function renderOverallPieChart(dataToRender) { const ctx = document.getElementById('overall-pie-chart').getContext('2d'); const backlogCount = dataToRender.backlog?.length || 0; const pendingCount = dataToRender.pending?.length || 0; const ongoingCount = dataToRender.ongoing?.length || 0; const completedCount = dataToRender.completed?.length || 0; const total = backlogCount + pendingCount + ongoingCount + completedCount; if (pieChartInstance) { pieChartInstance.destroy(); } pieChartInstance = new Chart(ctx, { type: 'pie', data: { labels: ['À fazer', 'Pendente', 'Em andamento', 'Concluído'], datasets: [{ data: [backlogCount, pendingCount, ongoingCount, completedCount], backgroundColor: ['#E57373', '#FFD54F', '#64B5F6', '#81C784'], borderColor: '#203147', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#c9d1d9', boxWidth: 12, padding: 15, font: { size: 11 } } }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } const value = context.raw; const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0; label += `${value} cards (${percentage}%)`; return label; } } }, datalabels: { formatter: (value, context) => { if (value === 0) return null; const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0); return (value / total * 100).toFixed(1) + '%'; }, color: '#fff', textStrokeColor: '#1a1a1a', textStrokeWidth: 2, font: { weight: 'bold', size: 12 } } } } }); }
+        function calculateDelay(endDateStr, realDateStr) { if (!endDateStr || !realDateStr) return 0; const previstoDate = new Date(endDateStr); const realDate = new Date(realDateStr); if (realDate > previstoDate) { const diffTime = realDate - previstoDate; return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); } return 0; }
+        function formatChecklistForTable(checklist, cardId) { if (!checklist || checklist.length === 0) return ''; const total = checklist.length; const completed = checklist.filter(item => item.concluido).length; const items = checklist.map(item => `${item.concluido ? '☑' : '☐'} ${item.texto} (Início: ${formatDate(item.startDate)}, Fim: ${formatDate(item.endDate)})`).join('<br>'); const checklistId = `checklist-items-${cardId}`; return `<div><span>(${completed}/${total})</span><button class="toggle-checklist" data-target-id="${checklistId}">▶</button></div><div id="${checklistId}" class="checklist-items">${items}</div>`; }
+        function renderDataTable(dataToRender) { const tbody = document.getElementById('data-table-body'); if (!tbody) return; tbody.innerHTML = ''; const columnsInOrder = ['backlog', 'pending', 'ongoing', 'completed', 'done']; columnsInOrder.forEach(columnId => { const statusName = statusNameMap[columnId] || (columnId.charAt(0).toUpperCase() + columnId.slice(1)); (dataToRender[columnId] || []).forEach(card => { const row = document.createElement('tr'); const delay = calculateDelay(card.endDate, card.completionDate); let reprogramado = ''; if (card.tags?.includes('Reprogramado sim')) reprogramado = 'Sim'; else if (card.tags?.includes('Reprogramado não')) reprogramado = 'Não'; const filteredTags = card.tags?.filter(tag => tag !== 'Reprogramado sim' && tag !== 'Reprogramado não'); row.innerHTML = `<td>${card.responsibles?.join(', ') || ''}</td><td>${card.title || ''}</td><td>${filteredTags?.join(', ') || ''}</td><td>${statusName}</td><td>${card.description || ''}</td><td>${formatChecklistForTable(card.checklist, card.id)}</td><td>${formatDate(card.startDate)}</td><td>${formatDate(card.endDate)}</td><td>${formatDate(card.completionDate)}</td><td>${delay > 0 ? delay : ''}</td><td>${reprogramado}</td>`; tbody.appendChild(row); }); }); }
+        function formatChecklistAsText(checklist) { if (!checklist || checklist.length === 0) return ''; return checklist.map(item => `${item.texto} (Início: ${item.startDate || 'N/A'}, Fim: ${item.endDate || 'N/A'}, Status: ${item.concluido ? 'Concluído' : 'Pendente'})`).join('; '); }
+        function sanitizeCSVField(field) { if (field === null || field === undefined) return '""'; let sanitized = field.toString().replace(/"/g, '""'); if (sanitized.search(/("|,|\n)/g) >= 0) sanitized = `"${sanitized}"`; return sanitized; }
+        function exportTableToCSV() { const dataToExport = getFilteredData(); const columnsInOrder = ['backlog', 'pending', 'ongoing', 'completed', 'done']; const headers = ["Responsável", "Título", "Flag", "Status", "Descrição", "Checklist", "Data Início", "Data Conclusão Prevista", "Data Conclusão Real", "Atraso (dias)", "Reprogramado?"]; let csvContent = headers.map(sanitizeCSVField).join(',') + '\r\n'; columnsInOrder.forEach(columnId => { const statusName = statusNameMap[columnId] || (columnId.charAt(0).toUpperCase() + columnId.slice(1)); (dataToExport[columnId] || []).forEach(card => { const delay = calculateDelay(card.endDate, card.completionDate); let reprogramado = ''; if (card.tags?.includes('Reprogramado sim')) reprogramado = 'Sim'; else if (card.tags?.includes('Reprogramado não')) reprogramado = 'Não'; const filteredTags = card.tags?.filter(tag => tag !== 'Reprogramado sim' && tag !== 'Reprogramado não'); const row = [ card.responsibles?.join('; ') || '', card.title || '', filteredTags?.join('; ') || '', statusName, card.description || '', formatChecklistAsText(card.checklist), card.startDate || '', card.endDate || '', card.completionDate || '', delay > 0 ? delay : '0', reprogramado ]; csvContent += row.map(sanitizeCSVField).join(',') + '\r\n'; }); }); const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); if (link.download !== undefined) { const url = URL.createObjectURL(blob); const today = new Date().toISOString().split('T')[0]; link.setAttribute("href", url); link.setAttribute("download", `resumo_tarefas_${today}.csv`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); } }
+        function exportTableToXLS() { const dataToExport = getFilteredData(); const columnsInOrder = ['backlog', 'pending', 'ongoing', 'completed', 'done']; const headers = [ "Responsável", "Título", "Flag", "Status", "Descrição", "Checklist / Item", "Data Início", "Data Conclusão Prevista", "Data Conclusão Real", "Atraso (dias)", "Reprogramado?" ]; let tableHTML = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>`; columnsInOrder.forEach(columnId => { const statusName = statusNameMap[columnId] || (columnId.charAt(0).toUpperCase() + columnId.slice(1)); (dataToExport[columnId] || []).forEach(card => { const delay = calculateDelay(card.endDate, card.completionDate); let reprogramado = card.tags?.includes('Reprogramado sim') ? 'Sim' : (card.tags?.includes('Reprogramado não') ? 'Não' : ''); const filteredTags = card.tags?.filter(tag => !tag.startsWith('Reprogramado')); const hasChecklist = card.checklist && card.checklist.length > 0; const mainRowStyle = hasChecklist ? 'style="mso-outline-level:1; font-weight: bold; background-color: #f0f0f0;"' : ''; const mainRowData = [ card.responsibles?.join(', ') || '', card.title || '', filteredTags?.join(', ') || '', statusName, card.description || '', hasChecklist ? `(${card.checklist.filter(i => i.concluido).length}/${card.checklist.length}) Itens` : 'N/A', formatDate(card.startDate), formatDate(card.endDate), formatDate(card.completionDate), delay > 0 ? delay : '', reprogramado ]; tableHTML += `<tr ${mainRowStyle}>${mainRowData.map(d => `<td>${d}</td>`).join('')}</tr>`; if (hasChecklist) { card.checklist.forEach(item => { const itemRowStyle = 'style="mso-outline-level:2;"'; const itemStatus = item.concluido ? '☑ Concluído' : '☐ Pendente'; const itemDateText = `(Início: ${formatDate(item.startDate) || 'N/A'}, Fim: ${formatDate(item.endDate) || 'N/A'})`; const itemRowData = Array(headers.length).fill(''); itemRowData[5] = `${itemStatus}: ${item.texto} ${itemDateText}`; tableHTML += `<tr ${itemRowStyle}>${itemRowData.map((d, i) => i === 5 ? `<td style="padding-left: 25px;">${d}</td>` : `<td>${d}</td>`).join('')}</tr>`; }); } }); }); tableHTML += '</tbody>'; const template = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table>${tableHTML}</table></body></html>`; const blob = new Blob([template], { type: 'application/vnd.ms-excel' }); const link = document.createElement("a"); if (link.download !== undefined) { const url = URL.createObjectURL(blob); const today = new Date().toISOString().split('T')[0]; link.setAttribute("href", url); link.setAttribute("download", `resumo_tarefas_${today}.xls`); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); } }
+        
+        function renderArchiveColumn() { const container = document.getElementById('cards-archive'); if (!container) return; const titleFilter = document.getElementById('archive-search-title').value.toLowerCase(); const responsibleFilter = document.getElementById('archive-search-responsible').value; const criticityFilter = document.getElementById('archive-search-criticity').value; if (!titleFilter && !responsibleFilter && !criticityFilter) { container.innerHTML = ''; return; } let filteredCards = kanbanData.archive || []; if (titleFilter) { filteredCards = filteredCards.filter(card => card.title.toLowerCase().includes(titleFilter)); } if (responsibleFilter) { filteredCards = filteredCards.filter(card => card.responsibles && card.responsibles.includes(responsibleFilter)); } if (criticityFilter) { filteredCards = filteredCards.filter(card => card.criticidade == criticityFilter); } container.innerHTML = ''; filteredCards.forEach(card => { container.appendChild(createCardElement(card, 'archive')); }); }
+
+        let draggedCardId = null, draggedCardSourceColumn = null;
+        function dragStart(e) { draggedCardId = e.target.dataset.cardId; draggedCardSourceColumn = e.target.dataset.columnId; e.target.classList.add('dragging'); e.stopPropagation(); }
+        function dragEnd(e) { e.target.classList.remove('dragging'); draggedCardId = null; draggedCardSourceColumn = null; }
+        function allowDrop(e) { e.preventDefault(); }
+        async function drop(event) { event.preventDefault(); const targetColumnElement = event.target.closest('.kanban-column'); if (!draggedCardId || !targetColumnElement) { return; } const targetColumnId = targetColumnElement.id.replace('column-', ''); if (draggedCardSourceColumn !== targetColumnId) { const sourceCards = [...kanbanData[draggedCardSourceColumn]]; const targetCards = [...(kanbanData[targetColumnId] || [])]; const cardIndex = sourceCards.findIndex(c => c.id === draggedCardId); if (cardIndex > -1) { const [cardToMove] = sourceCards.splice(cardIndex, 1); if (targetColumnId === 'archive') { cardToMove.status = 'Arquivado'; cardToMove.archivedBy = currentUserName || 'Desconhecido'; cardToMove.archivedAt = new Date().toISOString(); } targetCards.push(cardToMove); await updateColumnInFirebase(draggedCardSourceColumn, sourceCards); await updateColumnInFirebase(targetColumnId, targetCards); } } else { const columnId = draggedCardSourceColumn; const targetElement = event.target.closest('.kanban-card'); if (targetElement && targetElement.dataset.cardId === draggedCardId) { return; } const reorderedCards = [...kanbanData[columnId]]; const cardToMoveIndex = reorderedCards.findIndex(c => c.id === draggedCardId); if (cardToMoveIndex === -1) return; const [cardToMove] = reorderedCards.splice(cardToMoveIndex, 1); if (targetElement) { const targetCardId = targetElement.dataset.cardId; const targetIndex = reorderedCards.findIndex(c => c.id === targetCardId); reorderedCards.splice(targetIndex, 0, cardToMove); } else { reorderedCards.push(cardToMove); } await updateColumnInFirebase(columnId, reorderedCards); } }
+        async function handleReplanDates() { if (!currentCardId || !currentColumnId) return; const newEndDate = document.getElementById('modal-endDate').value; if (!newEndDate) { alert('Por favor, defina uma "Data de Fim Prevista" para o cartão primeiro.'); return; } if (!confirm('Isso irá substituir a data de fim de TODOS os itens do checklist pela data de fim prevista do cartão. Deseja continuar?')) { return; } const card = kanbanData[currentColumnId].find(c => c.id === currentCardId); if (!card) return; if (card.checklist && card.checklist.length > 0) { card.checklist.forEach(item => { item.endDate = newEndDate; }); } renderChecklist(card.checklist); await updateCardInFirebase(currentCardId, currentColumnId, card); alert('Datas do checklist atualizadas com sucesso!'); }
+        
+        // --- FUNÇÕES DA NOVA FUNCIONALIDADE DE E-MAIL ---
+        function toggleCardSelection(cardId) {
+            const cardElement = document.querySelector(`.kanban-card[data-card-id="${cardId}"]`);
+            if (selectedCards.has(cardId)) {
+                selectedCards.delete(cardId);
+                cardElement?.classList.remove('selected');
+            } else {
+                selectedCards.add(cardId);
+                cardElement?.classList.add('selected');
+            }
+            updateEmailButtonVisibility();
+        }
+
+        function updateEmailButtonVisibility() {
+            const emailBtn = document.getElementById('send-email-btn');
+            if (selectedCards.size > 0) {
+                emailBtn.style.display = 'inline-block';
+            } else {
+                emailBtn.style.display = 'none';
+            }
+        }
+        
+        function findCardById(cardId) {
+            for (const column in kanbanData) {
+                const card = kanbanData[column].find(c => c.id === cardId);
+                if (card) {
+                    return {card, status: statusNameMap[column] || column};
+                }
+            }
+            return null;
+        }
+
+        function sendEmailForSelectedCards() {
+            if (selectedCards.size === 0) {
+                alert("Nenhum card selecionado.");
+                return;
+            }
+
+            let emailBody = "Resumo das Tarefas Selecionadas:\n\n";
+
+            selectedCards.forEach(cardId => {
+                const found = findCardById(cardId);
+                if (found) {
+                    const { card, status } = found;
+                    emailBody += "----------------------------------------\n";
+                    emailBody += `Título: ${card.title}\n`;
+                    emailBody += `Status: ${status}\n`;
+                    emailBody += `Responsáveis: ${card.responsibles?.join(', ') || 'N/A'}\n`;
+                    emailBody += `Data Fim Prevista: ${formatDate(card.endDate) || 'N/A'}\n`;
+                    emailBody += `Descrição: ${card.description || 'Nenhuma'}\n`;
+                    if (card.checklist && card.checklist.length > 0) {
+                        emailBody += "Checklist:\n";
+                        card.checklist.forEach(item => {
+                            emailBody += `  [${item.concluido ? 'X' : ' '}] ${item.texto}\n`;
+                        });
+                    }
+                    emailBody += "----------------------------------------\n\n";
+                }
+            });
+
+            const subject = "Resumo de Tarefas Selecionadas - FlowDesk";
+            const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+            
+            window.location.href = mailtoLink;
+        }
+
+        function createResponsibleOptionButtons() { const c = document.getElementById('responsible-options'); c.innerHTML = ''; responsibleList.forEach(n => { const b = document.createElement('button'); b.className = 'tag-option'; b.textContent = n; b.onclick = () => addResponsibleToModal(n); c.appendChild(b); }); }
+        function populateResponsibleDropdown(selectElementId) { const filterDropdown = document.getElementById(selectElementId); if (!filterDropdown) return; let optionsHTML = '<option value="">Todos</option>'; responsibleList.forEach(name => { optionsHTML += `<option value="${name}">${name}</option>`; }); filterDropdown.innerHTML = optionsHTML; }
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginContainer = document.getElementById('login-container');
+            const appContainer = document.getElementById('app-container');
+            const loginForm = document.getElementById('login-form');
+            const errorMessage = document.getElementById('error-message');
+            const forgotPasswordLink = document.getElementById('forgot-password-link');
+            const resetModal = document.getElementById('reset-modal');
+            const resetForm = document.getElementById('reset-form');
+            const resetMessage = document.getElementById('reset-message');
+            const cancelResetBtn = document.getElementById('cancel-reset-btn');
+            function getAuthErrorMessage(errorCode) { switch (errorCode) { case 'auth/user-not-found': return 'Nenhum usuário encontrado com este e-mail.'; case 'auth/wrong-password': return 'Senha incorreta. Tente novamente.'; case 'auth/invalid-email': return 'O formato do e-mail é inválido.'; default: return 'Ocorreu um erro. Tente novamente.'; } }
+            function showApp(user) { currentUserName = userEmailToNameMap[user.email] || null; loginContainer.style.display = 'none'; appContainer.style.display = 'block'; stopAnimation(); createResponsibleOptionButtons(); populateResponsibleDropdown('responsible-filter'); populateResponsibleDropdown('archive-search-responsible'); listenForRealtimeUpdates(); listenForNotifications(); }
+            auth.onAuthStateChanged(user => { if (user) { if (sessionStorage.getItem('sessionActive') === 'true') { showApp(user); } else { auth.signOut(); } } else { currentUserName = null; if (unsubscribeNotifications) unsubscribeNotifications(); loginContainer.style.display = 'flex'; appContainer.style.display = 'none'; sessionStorage.removeItem('sessionActive'); initNetworkAnimation(); animateNetwork(); } });
+            loginForm.addEventListener('submit', (event) => { event.preventDefault(); errorMessage.style.display = 'none'; const email = document.getElementById('email').value; const password = document.getElementById('password').value; auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).then(() => auth.signInWithEmailAndPassword(email, password)).then(() => sessionStorage.setItem('sessionActive', 'true')).catch((error) => { errorMessage.textContent = getAuthErrorMessage(error.code); errorMessage.style.display = 'block'; }); });
+            forgotPasswordLink.addEventListener('click', (e) => { e.preventDefault(); resetModal.style.display = 'flex'; });
+            cancelResetBtn.addEventListener('click', () => { resetModal.style.display = 'none'; resetMessage.textContent = ''; resetForm.reset(); });
+            resetForm.addEventListener('submit', (e) => { e.preventDefault(); const email = document.getElementById('reset-email').value; resetMessage.textContent = 'Enviando...'; resetMessage.style.color = '#a0a8b1'; auth.sendPasswordResetEmail(email).then(() => { resetMessage.textContent = 'Link de redefinição enviado! Verifique seu e-mail.'; resetMessage.style.color = '#81C784'; }).catch((error) => { resetMessage.textContent = getAuthErrorMessage(error.code); resetMessage.style.color = '#F84955'; }); });
+            document.getElementById('notification-bell')?.addEventListener('click', openNotificationsModal);
+            document.getElementById('notifications-list')?.addEventListener('click', (event) => { const button = event.target.closest('.mark-read-btn'); if (button) { const docId = button.dataset.docId; const notificationItem = button.closest('.notification-item'); if (notificationItem) { notificationItem.style.transition = 'opacity 0.3s ease, transform 0.3s ease'; notificationItem.style.opacity = '0'; notificationItem.style.transform = 'translateX(20px)'; setTimeout(() => { notificationItem.remove(); const list = document.getElementById('notifications-list'); if (list && list.children.length === 0) { list.innerHTML = '<div class="no-notifications">Nenhuma notificação nova</div>'; } }, 300); } markNotificationAsRead(docId).catch(error => { console.error("A atualização em segundo plano falhou:", error); alert("Ocorreu um erro ao sincronizar a notificação. Ela poderá aparecer novamente."); }); } });
+            document.getElementById('clear-all-notifications-btn')?.addEventListener('click', markAllNotificationsAsRead);
+            document.getElementById('responsible-filter')?.addEventListener('change', renderFilteredViews);
+            document.getElementById('criticity-filter')?.addEventListener('change', renderFilteredViews);
+            document.getElementById('overdue-filter')?.addEventListener('change', renderFilteredViews);
+            document.getElementById('data-table-body')?.addEventListener('click', function(event) { const button = event.target.closest('.toggle-checklist'); if (button) { const targetId = button.dataset.targetId; const checklistItems = document.getElementById(targetId); if (checklistItems) { const isExpanded = checklistItems.style.display === 'block'; checklistItems.style.display = isExpanded ? 'none' : 'block'; button.classList.toggle('expanded', !isExpanded); button.textContent = isExpanded ? '▶' : '▼'; } } });
+            document.getElementById('export-csv-btn')?.addEventListener('click', exportTableToCSV);
+            document.getElementById('export-xls-btn')?.addEventListener('click', exportTableToXLS);
+            document.getElementById('replan-dates-btn')?.addEventListener('click', handleReplanDates);
+            window.addEventListener('resize', () => { if (document.getElementById('login-container').style.display !== 'none') { initNetworkAnimation(); } });
+            // ADICIONA O EVENTO DE CLIQUE AO BOTÃO DE E-MAIL
+            document.getElementById('send-email-btn').addEventListener('click', sendEmailForSelectedCards);
+        });
+        window.onclick = function(e) { if (e.target == document.getElementById('card-modal')) closeModal(); if (e.target == document.getElementById('notifications-modal')) closeNotificationsModal(); if (e.target == document.getElementById('reset-modal')) { document.getElementById('reset-modal').style.display = 'none'; } }
+    </script>
+
+</body>
+</html>

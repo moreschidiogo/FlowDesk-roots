@@ -2,7 +2,6 @@
 
 Aplicação de gerenciamento de tarefas e fluxos de trabalho para otimizar a produtividade de equipes. Este projeto foi criado como parte do meu portfólio de desenvolvimento, demonstrando habilidades em desenvolvimento full-stack com React e Node.js.
 
-!(C:\Users\mores\OneDrive\Documentos\FlowDesk-roots\app.png)
 ---
 
 ## ✨ Features
